@@ -4,3 +4,4 @@ roms
 *.rlib
 *.log
 *.state
+.idea
