@@ -470,7 +470,7 @@ impl Savable for CpuPpuInterconnect {
 
 impl CpuPpuInterconnect {
     pub fn new(ppu: &mut Ppu, cpu: &mut C6502) -> CpuPpuInterconnect {
-        CpuPpuInterconnect { ppu: ppu, cpu: cpu }
+        CpuPpuInterconnect { ppu, cpu }
     }
 }
 

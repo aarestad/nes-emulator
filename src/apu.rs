@@ -43,7 +43,8 @@ const ENABLE_TRIANGLE: bool = true;
 const ENABLE_NOISE: bool = true;
 const ENABLE_DMC: bool = false;
 
-const SAMPLES_PER_FRAME: f64 = 735.0; // 44100 Hz audio / 60 FPS
+const SAMPLES_PER_FRAME: f64 = 735.0;
+// 44100 Hz audio / 60 FPS
 const CLOCKS_PER_FRAME: f64 = 29780.0;
 
 pub fn map_apu_port(ptr: u16) -> Option<ApuPort> {
@@ -225,15 +226,15 @@ impl Apu {
         let tnd_out = 0.00851 * triangle + 0.00494 * noise + 0.00335 * dmc;
         let output = pulse_out + tnd_out;
         //return 0.5;
-        return output as f32;
+        output as f32
     }
     fn read_status(&self) -> u8 {
         // TODO - Clear the frame interrupt flag
-        return (self.pulse1.is_enabled() as u8) << 0
+        (self.pulse1.is_enabled() as u8) << 0
             | (self.pulse2.is_enabled() as u8) << 1
             | (self.triangle.is_enabled() as u8) << 2
             | (self.noise.is_enabled() as u8) << 3
-            | (self.dmc.is_enabled() as u8) << 4;
+            | (self.dmc.is_enabled() as u8) << 4
     }
     fn write_status(&mut self, v: u8) {
         let enable_pulse1 = v & 0b00001;
@@ -255,7 +256,7 @@ impl AddressSpace for Apu {
             Some(SND_CHN) => self.read_status(),
             _ => {
                 //eprintln!("DEBUG - APU READ - {:x}", ptr);
-                return 0;
+                0
             }
         }
     }
@@ -296,8 +297,7 @@ struct LengthCounter {
 impl Clocked for LengthCounter {
     fn clock(&mut self) {
         // eprintln!("DEBUG - LENGTH COUNTER CLOCKED {} {} {}", self.enabled, self.halt, self.counter);
-        if self.counter == 0 || self.halt {
-        } else {
+        if self.counter == 0 || self.halt {} else {
             self.counter -= 1;
         }
     }
@@ -318,7 +318,7 @@ impl LengthCounter {
         }
     }
     pub fn is_silenced(&self) -> bool {
-        return self.counter == 0 || !self.enabled;
+        self.counter == 0 || !self.enabled
     }
     pub fn is_enabled(&self) -> bool {
         self.enabled
@@ -363,7 +363,7 @@ impl LinearCounter {
         self.reload = value;
     }
     pub fn is_silenced(&self) -> bool {
-        return self.counter == 0;
+        self.counter == 0
     }
     pub fn set_enabled(&mut self, value: bool) {
         self.enabled = value;
@@ -374,14 +374,13 @@ impl Clocked for LinearCounter {
     fn clock(&mut self) {
         if self.reload {
             self.counter = self.reload_value;
-        } else {
-            if self.counter != 0 {
-                self.counter -= 1;
-                if self.counter == 0 {
-                    //eprintln!("DEBUG - LINEAR COUNTER SET TO 0 - {}", self.reload_value);
-                }
+        } else if self.counter != 0 {
+            self.counter -= 1;
+            if self.counter == 0 {
+                //eprintln!("DEBUG - LINEAR COUNTER SET TO 0 - {}", self.reload_value);
             }
         }
+
         if self.enabled {
             self.reload = false;
         }
@@ -454,7 +453,7 @@ impl Triangle {
     }
     pub fn sample(&self) -> f64 {
         let step = self.sequencer_step;
-        return if step < 16 { 15 - step } else { step - 16 } as f64;
+        (if step < 16 { 15 - step } else { step - 16 }) as f64
     }
     pub fn clock_half_frame(&mut self) {
         self.length_counter.clock();
@@ -466,7 +465,8 @@ impl Triangle {
 
 // https://wiki.nesdev.com/w/index.php/APU_Sweep
 struct Sweep {
-    negation: bool, // false=one's complement; true = two's complement
+    negation: bool,
+    // false=one's complement; true = two's complement
     enabled: bool,
     divider_period: u8,
     divider: u8,
@@ -522,7 +522,7 @@ impl Sweep {
         self.period = period;
     }
     pub fn is_muted(&self) -> bool {
-        return self.period < 8 || self.target_period() > 0x7ff;
+        self.period < 8 || self.target_period() > 0x7ff
     }
     pub fn write_control(&mut self, x: u8) {
         self.shift_count = x & 0x7;
@@ -530,9 +530,7 @@ impl Sweep {
         self.divider_period = (x >> 4) & 0x7;
         self.enabled = get_bit(x, 7) > 0;
     }
-    pub fn period(&self) -> u16 {
-        return self.period;
-    }
+
     fn target_period(&self) -> u16 {
         let time = self.timer;
         let mut change = time >> self.shift_count;
@@ -540,7 +538,7 @@ impl Sweep {
             change = self.negate(change);
         }
         let period = self.period;
-        return period.wrapping_add(change);
+        period.wrapping_add(change)
     }
 
     fn negate(&self, value: u16) -> u16 {
@@ -623,7 +621,7 @@ struct Pulse {
     length_counter: LengthCounter,
 }
 
-const PULSE_SEQUENCER_DUTY_TABLE: [u8; 4] = [0b01000000, 0b01100000, 0b01111000, 0b10011111];
+const PULSE_SEQUENCER_DUTY_TABLE: [u8; 4] = [0b0100_0000, 0b0110_0000, 0b0111_1000, 0b1001_1111];
 
 impl Pulse {
     pub fn new(negation: bool) -> Pulse {
@@ -663,8 +661,7 @@ impl Pulse {
     }
     fn sequencer(&self) -> f64 {
         let duty = PULSE_SEQUENCER_DUTY_TABLE[self.duty_cycle as usize];
-        let x = (duty >> (7 - self.sequencer_step % 8)) & 1;
-        return x as f64;
+        ((duty >> (7 - self.sequencer_step % 8)) & 1) as f64
     }
     fn sample(&self) -> f64 {
         // eprintln!("DEBUG - PULSE - {} {} {} {}",
@@ -673,9 +670,9 @@ impl Pulse {
         //           self.sequencer(),
         //           self.envelope.sample());
         if !self.is_muted() {
-            return self.sequencer() * self.envelope.sample();
+            self.sequencer() * self.envelope.sample()
         } else {
-            return 0.0;
+            0.0
         }
     }
     fn is_muted(&self) -> bool {
@@ -691,7 +688,7 @@ impl Pulse {
         self.envelope.clock();
     }
     fn clock_half_frame(&mut self) {
-        self.timer_period = self.sweep.period();
+        self.timer_period = self.sweep.period;
         self.sweep.set_period(self.timer_period);
         self.sweep.clock();
         self.length_counter.clock();
@@ -777,7 +774,7 @@ impl Noise {
             ^ (get_bit(feedback as u8, ternary(self.mode, 6, 1)) > 0);
         feedback >>= 1;
         feedback |= ternary(new_bit, 1 << 14, 0);
-        return feedback;
+        feedback
     }
     pub fn clock_quarter_frame(&mut self) {}
     pub fn clock_half_frame(&mut self) {
@@ -791,19 +788,24 @@ impl Dmc {
     pub fn new() -> Dmc {
         Dmc {}
     }
+
     pub fn sample(&self) -> f64 {
-        return 0.0;
+        0.0
     }
+
     pub fn is_enabled(&self) -> bool {
         // TODO
         false
     }
+
     pub fn set_enabled(&mut self, v: bool) {
         // TODO
     }
+
     pub fn clock_half_frame(&mut self) {
         // TODO
     }
+
     pub fn clock_quarter_frame(&mut self) {
         // TODO
     }
