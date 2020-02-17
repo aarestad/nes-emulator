@@ -69,10 +69,10 @@ pub fn read_ines(filename: String) -> Result<Ines, io::Error> {
     // Header
     let mut header: [u8; 16] = [0; 16];
     file.read_exact(&mut header)?;
-    assert!(header[0] == 0x4e);
-    assert!(header[1] == 0x45);
-    assert!(header[2] == 0x53);
-    assert!(header[3] == 0x1a);
+    assert_eq!(header[0], 0x4e);
+    assert_eq!(header[1], 0x45);
+    assert_eq!(header[2], 0x53);
+    assert_eq!(header[3], 0x1a);
     let num_prg_chunks = header[4];
     let num_chr_chunks = header[5];
     let mut prg_rom: Vec<u8> = Vec::new();
@@ -88,7 +88,7 @@ pub fn read_ines(filename: String) -> Result<Ines, io::Error> {
         chr_rom.append(&mut bf);
     }
     let ret = Ines {
-        num_prg_chunks: num_prg_chunks,
+        num_prg_chunks,
         num_chr_chunks: header[5],
         mirroring: get_bit(header[6], 0) > 0,
         has_battery_backed_ram: get_bit(header[6], 1) > 0,

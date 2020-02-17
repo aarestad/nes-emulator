@@ -507,7 +507,7 @@ impl Clocked for Sweep {
 impl Sweep {
     pub fn new(negation: bool) -> Sweep {
         Sweep {
-            negation: negation,
+            negation,
             enabled: false,
             divider_period: 0,
             divider: 0,

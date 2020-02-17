@@ -84,7 +84,7 @@ pub struct Rom {
 
 impl Rom {
     pub fn new(bs: Vec<u8>) -> Rom {
-        Rom { bs: bs }
+        Rom { bs }
     }
 }
 
@@ -130,10 +130,10 @@ impl MirroredAddressSpace {
         }
         let width = self.base_end - self.base_begin + 1;
         let relptr = ptr - self.extended_begin;
-        if relptr >= width {
-            return (ptr - self.extended_begin) % width + self.base_begin;
+        return if relptr >= width {
+            (ptr - self.extended_begin) % width + self.base_begin
         } else {
-            return relptr + self.base_begin;
+            relptr + self.base_begin
         }
     }
 }
@@ -292,7 +292,7 @@ impl Mapper {
         let base_end = base_begin + (end - begin);
         let space: MirroredAddressSpace = MirroredAddressSpace {
             base: space,
-            base_begin: base_begin,
+            base_begin,
             base_end,
             extended_begin,
             extended_end,
@@ -342,7 +342,7 @@ impl Savable for LoggedAddressSpace {
 impl LoggedAddressSpace {
     pub fn new(space: Box<dyn AddressSpace>) -> LoggedAddressSpace {
         LoggedAddressSpace {
-            space: space,
+            space,
             log: UnsafeCell::new(vec![]),
         }
     }

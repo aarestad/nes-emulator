@@ -98,7 +98,7 @@ impl C6502 {
             decimal: false,
             overflow: false,
             negative: false,
-            mapper: mapper,
+            mapper,
             counter: 0,
             clocks: 0,
             is_tracing: false,
